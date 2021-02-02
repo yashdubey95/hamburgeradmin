@@ -4,7 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.example.hamburgeradmin.model.APIDetails;
-import com.example.hamburgeradmin.repository.InterceptorDataRepository;
+import com.example.hamburgeradmin.repository.APIDetailsRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @Log4j2
 public class ExecutionTimeInterceptor implements HandlerInterceptor  {
 
-    private InterceptorDataRepository interceptorDataRepository;
+    private APIDetailsRepository apiDetailsRepository;
     @Override
     public void afterCompletion(HttpServletRequest request,
                                 HttpServletResponse response, Object object, Exception arg3)
@@ -43,7 +43,7 @@ public class ExecutionTimeInterceptor implements HandlerInterceptor  {
         apiDetails.setReqUrl(request.getRequestURL().toString());
         apiDetails.setReqTimeStamp(timeStamp);
         apiDetails.setReqExecTime(time);
-        interceptorDataRepository.save(apiDetails);
+        apiDetailsRepository.save(apiDetails);
 
     }
 
