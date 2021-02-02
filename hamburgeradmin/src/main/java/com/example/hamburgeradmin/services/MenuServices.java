@@ -1,123 +1,115 @@
 package com.example.hamburgeradmin.services;
 
+import com.example.hamburgeradmin.assemblers.MenuAssembler;
+import com.example.hamburgeradmin.dto.MenuDTO;
+import com.example.hamburgeradmin.exception.InternalServerErrorException;
+import com.example.hamburgeradmin.exception.ResourceNotFoundException;
 import com.example.hamburgeradmin.model.Menu;
 import com.example.hamburgeradmin.repository.MenuRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+/**
+ * @author Yash Dubey
+ * <p>
+ * This class implements methods to fetch, store, update and delete records from Menu entity
+ */
+@AllArgsConstructor
 @Service
 @Log4j2
 public class MenuServices {
 
-    @Autowired
-    MenuRepository menuRepository;
+    private final MenuRepository menuRepository;
+    private final PagedResourcesAssembler pagedResourcesAssembler;
+    private final MenuAssembler menuAssembler;
 
-    public ResponseEntity<List<Menu>> getAllMenus(String name, String category) {
+    public CollectionModel<MenuDTO> getAllMenus(String name, String category, int page, int size) {
         try {
-            List<Menu> menu = new ArrayList<>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Menu> pageMenu;
 
             if(name == null  && category == null)
-                menuRepository.findAll().forEach(menu::add);
+                pageMenu = menuRepository.findAll(paging);
             else if(category == null)
-                menuRepository.findByItemName(name).forEach(menu::add);
-            else if(name == null)
-                menuRepository.findByCategory(category).forEach(menu::add);
+                pageMenu = menuRepository.findByItemNameContaining(name,paging);
+            else
+                pageMenu = menuRepository.findByCategory(category, paging);
 
-            if (menu.isEmpty()) {
-                log.info("No content for Menu!");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
+            if(! CollectionUtils.isEmpty(pageMenu.getContent())) return pagedResourcesAssembler.toModel(pageMenu, menuAssembler);
+            return null;
 
-            return new ResponseEntity<>(menu, HttpStatus.OK);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<Menu> getMenuById(String id) {
+    public MenuDTO getMenuById(String id) {
         Optional<Menu> menuData = menuRepository.findById(id);
-
+        Menu menuItem = new Menu();
         if (menuData.isPresent()) {
-            return new ResponseEntity<>(menuData.get(), HttpStatus.OK);
-        } else {
-            log.info("Menu with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            menuItem = menuData.get();
+            return menuAssembler.toModel(menuItem);
         }
+        return null;
     }
 
-    public ResponseEntity<Menu> createMenu(Menu menu) {
+    public MenuDTO createMenu(Menu menu) {
         try {
-            System.out.println(menu.getComboAllowed());
-            Menu _menu = menuRepository.save(menu);
-            log.info("New menu created!");
-            return new ResponseEntity<>(_menu, HttpStatus.CREATED);
+            Menu menuItem = menuRepository.save(menu);
+            return menuAssembler.toModel(menuItem);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<Menu> updateMenu(String id, Menu menu) {
+    public MenuDTO updateMenu(String id, Menu menu) {
         Optional<Menu> menuData = menuRepository.findByMenuId(id);
-
+        Menu menuItemDTO;
         if (menuData.isPresent()) {
-            Menu _menu = menuData.get();
-            _menu.setCategory(menu.getCategory());
-            _menu.setItemName(menu.getItemName());
-            _menu.setItemPrice(menu.getItemPrice());
-            _menu.setComboAllowed(menu.getComboAllowed());
-            _menu.setComboPrice(menu.getComboPrice());
-            return new ResponseEntity<>(menuRepository.save(_menu), HttpStatus.OK);
-        } else {
-            log.info("Menu with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Menu menuItem = menuData.get();
+            menuItem.setCategory(menu.getCategory());
+            menuItem.setItemName(menu.getItemName());
+            menuItem.setItemPrice(menu.getItemPrice());
+            menuItem.setComboAllowed(menu.getComboAllowed());
+            menuItem.setComboPrice(menu.getComboPrice());
+            menuItemDTO = menuRepository.save(menuItem);
+            return menuAssembler.toModel(menuItemDTO);
         }
+        return null;
     }
 
-    public ResponseEntity<HttpStatus> deleteMenu(String id) {
-        try {
+    public String deleteMenu(String id) {
+        if (menuRepository.existsById(id)){
             menuRepository.deleteById(id);
-            log.info("Menu with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return "Menu Item with id: "+id+" deleted";
         }
+        throw new ResourceNotFoundException("Menu", id);
     }
 
-    public ResponseEntity<HttpStatus> deleteAllMenus() {
-        try {
-            menuRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public String deleteAllMenus() {
+        menuRepository.deleteAll();
+        return "All the Menu Items are deleted";
     }
 
-    public ResponseEntity<List<Menu>> getByCombo(Boolean combo) {
+    public CollectionModel<MenuDTO> getByCombo(Boolean combo, int page, int size) {
         try {
-            List<Menu> menu = new ArrayList<>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Menu> pageMenu = menuRepository.findByComboAllowed(true, paging);
 
-            menuRepository.findByComboAllowed(combo).forEach(menu::add);
+            if(! CollectionUtils.isEmpty(pageMenu.getContent())) return pagedResourcesAssembler.toModel(pageMenu, menuAssembler);
+            return null;
 
-            if (menu.isEmpty()) {
-                log.info("Menu with combo not found!");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(menu, HttpStatus.OK);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 }
