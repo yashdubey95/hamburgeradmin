@@ -67,18 +67,15 @@ public class LocationController {
 
     @Operation(summary = "Create a new Location in the Location Entity")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Location created",
+            @ApiResponse(responseCode = "200", description = "Location created",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Location.class)) }),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "400", description = "Bad Request",
                     content = @Content) })
     @PostMapping("/locations")
     public ResponseEntity createLocation(@RequestBody Location location) {
         LocationDTO createdLocation = locationService.createLocation(location);
-        if(createdLocation != null) {
-            return ResponseEntity.ok(createdLocation);
-        }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(createdLocation);
     }
 
     @Operation(summary = "Update location by id in the Location Entity")
