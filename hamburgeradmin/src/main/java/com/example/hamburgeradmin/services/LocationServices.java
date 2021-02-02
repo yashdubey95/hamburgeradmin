@@ -1,114 +1,112 @@
 package com.example.hamburgeradmin.services;
 
+import com.example.hamburgeradmin.assemblers.LocationAssembler;
+import com.example.hamburgeradmin.dto.LocationDTO;
+import com.example.hamburgeradmin.exception.InternalServerErrorException;
+import com.example.hamburgeradmin.exception.ResourceNotFoundException;
 import com.example.hamburgeradmin.model.Location;
 import com.example.hamburgeradmin.repository.LocationRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+/**
+ * @author Yash Dubey
+ * <p>
+ * This class implements methods to fetch, store, update and delete records from Location entity
+ */
+@AllArgsConstructor
 @Service
 @Log4j2
 public class LocationServices {
 
-    @Autowired
-    LocationRepository locationRepository;
+    private final LocationAssembler locationAssembler;
+    private final LocationRepository locationRepository;
+    private final PagedResourcesAssembler pagedResourcesAssembler;
 
-    public ResponseEntity<List<Location>> getAllLocations(String name){
+    public CollectionModel<LocationDTO> getAllLocations(String name, int page, int size){
         try {
-            List<Location> location = new ArrayList<>();
-
+            Pageable paging = PageRequest.of(page, size);
+            Page<Location> pageLocations;
             if (name == null)
-                locationRepository.findAll().forEach(location::add);
+                pageLocations = locationRepository.findAll(paging);
             else
-                locationRepository.findByNameContaining(name).forEach(location::add);
+                pageLocations = locationRepository.findByNameContaining(name, paging);
 
-            if (location.isEmpty()) {
-                log.info("Parameter Name : {}",name);
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
+            if(! CollectionUtils.isEmpty(pageLocations.getContent())) return pagedResourcesAssembler.toModel(pageLocations, locationAssembler);
+            return null;
 
-            return new ResponseEntity<>(location, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<Location> getLocationById(String id) {
+    public LocationDTO getLocationById(String id) {
         Optional<Location> locationData = locationRepository.findById(id);
-
+        Location location;
         if (locationData.isPresent()) {
-            return new ResponseEntity<>(locationData.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            location = locationData.get();
+            return locationAssembler.toModel(location);
         }
+        return null;
     }
 
-    public ResponseEntity<Location> createLocation(Location location) {
+    public LocationDTO createLocation(Location location) {
         try {
-            System.out.println(location.getActive());
-            Location _location = locationRepository.save(location);
-            return new ResponseEntity<>(_location, HttpStatus.CREATED);
+            Location createdlocation = locationRepository.save(location);
+            return locationAssembler.toModel(createdlocation);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<Location> updateLocation(String id, Location location){
+    public LocationDTO updateLocation(String id, Location location){
         Optional<Location> locationData = locationRepository.findByLocationId(id);
-
+        Location locationDTO;
         if (locationData.isPresent()) {
-            Location _location = locationData.get();
-            _location.setName(location.getName());
-            _location.setLatitude(location.getLatitude());
-            _location.setLongitude(location.getLongitude());
-            _location.setPhone(location.getPhone());
-            _location.setAddress(location.getAddress());
-            _location.setActive(location.getActive());
-            return new ResponseEntity<>(locationRepository.save(_location), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Location updatedLocation = locationData.get();
+            updatedLocation.setName(location.getName());
+            updatedLocation.setLatitude(location.getLatitude());
+            updatedLocation.setLongitude(location.getLongitude());
+            updatedLocation.setPhone(location.getPhone());
+            updatedLocation.setAddress(location.getAddress());
+            updatedLocation.setActive(location.getActive());
+            locationDTO = locationRepository.save(updatedLocation);
+            return locationAssembler.toModel(locationDTO);
         }
+        return null;
     }
 
-    public ResponseEntity<HttpStatus> deleteLocation(String id) {
-        try {
+    public String deleteLocation(String id) {
+        if (locationRepository.existsById(id)){
             locationRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return "Location with id: "+id+" deleted";
         }
+        throw new ResourceNotFoundException("Location", id);
     }
 
-    public ResponseEntity<HttpStatus> deleteAllLocations() {
-        try {
-            locationRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public String deleteAllLocations() {
+        locationRepository.deleteAll();
+        return "All Location deleted";
     }
 
-    public ResponseEntity<List<Location>> getByActive(Boolean active) {
+    public CollectionModel<LocationDTO> getByActive(Boolean active, int page, int size) {
         try {
-            List<Location> location = new ArrayList<>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<Location> pageLocations = locationRepository.findByActive(true, paging);
 
-            locationRepository.findByActive(active).forEach(location::add);
-
-            if (location.isEmpty()) {
-                log.info("Menu with combo not found!");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(location, HttpStatus.OK);
+            if(! CollectionUtils.isEmpty(pageLocations.getContent())) return pagedResourcesAssembler.toModel(pageLocations, locationAssembler);
+            return null;
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 }
