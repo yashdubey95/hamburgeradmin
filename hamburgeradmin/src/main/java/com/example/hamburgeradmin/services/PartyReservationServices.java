@@ -1,123 +1,106 @@
 package com.example.hamburgeradmin.services;
 
+import com.example.hamburgeradmin.assemblers.PartyReservationAssembler;
+import com.example.hamburgeradmin.dto.PartyReservationDTO;
+import com.example.hamburgeradmin.exception.InternalServerErrorException;
+import com.example.hamburgeradmin.exception.ResourceNotFoundException;
 import com.example.hamburgeradmin.model.PartyReservation;
 import com.example.hamburgeradmin.repository.PartyReservationRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+/**
+ * @author Yash Dubey
+ * <p>
+ * This class implements methods to fetch, store, update and delete records from PartyReservation entity
+ */
+@AllArgsConstructor
 @Service
 @Log4j2
 public class PartyReservationServices {
 
-    @Autowired
-    PartyReservationRepository partyReservationRepository;
+    private final PartyReservationRepository partyReservationRepository;
+    private final PagedResourcesAssembler pagedResourcesAssembler;
+    private final PartyReservationAssembler partyReservationAssembler;
 
-    public ResponseEntity<List<PartyReservation>> getAllReservations(String name) {
+    public CollectionModel<PartyReservationDTO> getAllReservations(String name, String partyType, int page, int size) {
         try {
-            List<PartyReservation> reservation = new ArrayList<>();
+            Pageable paging = PageRequest.of(page, size);
+            Page<PartyReservation> pageReservations;
 
-            if (name == null)
-                partyReservationRepository.findAll().forEach(reservation::add);
+            if (name == null && partyType == null)
+                pageReservations = partyReservationRepository.findAll(paging);
+            else if(partyType == null)
+                pageReservations = partyReservationRepository.findByCustomerNameContaining(name, paging);
             else
-                partyReservationRepository.findByCustomerName(name).forEach(reservation::add);
+                pageReservations = partyReservationRepository.findByPartyType(partyType, paging);
 
-            if (reservation.isEmpty()) {
-                log.info("No Reservation found!");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
+            if(! CollectionUtils.isEmpty(pageReservations.getContent())) return pagedResourcesAssembler.toModel(pageReservations, partyReservationAssembler);
+            return null;
 
-            return new ResponseEntity<>(reservation, HttpStatus.OK);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<PartyReservation> getReservationById(String id) {
+    public PartyReservationDTO getReservationById(String id) {
         Optional<PartyReservation> reservationData = partyReservationRepository.findById(id);
-
+        PartyReservation reservation;
         if (reservationData.isPresent()) {
-            return new ResponseEntity<>(reservationData.get(), HttpStatus.OK);
-        } else {
-            log.info("Reservation with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            reservation = reservationData.get();
+            return partyReservationAssembler.toModel(reservation);
         }
+        return null;
     }
 
-    public ResponseEntity<PartyReservation> createReservation(PartyReservation reservation) {
+    public PartyReservationDTO createReservation(PartyReservation reservation) {
         try {
-            PartyReservation _reservation = partyReservationRepository.save(reservation);
-            log.info("New Reservation created!");
-            return new ResponseEntity<>(_reservation, HttpStatus.CREATED);
+            PartyReservation createReservation = partyReservationRepository.save(reservation);
+            return partyReservationAssembler.toModel(createReservation);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
-    public ResponseEntity<PartyReservation> updateReservation(@PathVariable("id") String id, @RequestBody PartyReservation reservation) {
+    public PartyReservationDTO updateReservation(@PathVariable("id") String id, @RequestBody PartyReservation reservation) {
         Optional<PartyReservation> reservationData = partyReservationRepository.findByReservationId(id);
-
+        PartyReservation reservationDTO;
         if (reservationData.isPresent()) {
-            PartyReservation _reservation = reservationData.get();
-            _reservation.setCustomerName(reservation.getCustomerName());
-            _reservation.setPeopleCount(reservation.getPeopleCount());
-            _reservation.setTable(reservation.getTable());
-            _reservation.setTime(reservation.getTime());
-            _reservation.setPartyType(reservation.getPartyType());
-            _reservation.setDate(reservation.getDate());
-            return new ResponseEntity<>(partyReservationRepository.save(_reservation), HttpStatus.OK);
-        } else {
-            log.info("Reservation with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            PartyReservation updateReservation = reservationData.get();
+            updateReservation.setCustomerName(reservation.getCustomerName());
+            updateReservation.setPeopleCount(reservation.getPeopleCount());
+            updateReservation.setTable(reservation.getTable());
+            updateReservation.setStartTime(reservation.getStartTime());
+            updateReservation.setEndTime(reservation.getEndTime());
+            updateReservation.setPartyType(reservation.getPartyType());
+            updateReservation.setDate(reservation.getDate());
+            reservationDTO = partyReservationRepository.save(updateReservation);
+            return partyReservationAssembler.toModel(reservationDTO);
         }
+        return null;
     }
 
-    public ResponseEntity<HttpStatus> deleteReservation(String id) {
-        try {
+    public String deleteReservation(String id) {
+        if (partyReservationRepository.existsById(id)){
             partyReservationRepository.deleteById(id);
-            log.info("Reservation with id: "+id+" not found!");
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return "Reservation with id: "+id+" deleted";
         }
+        throw new ResourceNotFoundException("Reservation", id);
     }
 
-    public ResponseEntity<HttpStatus> deleteReservations() {
-        try {
-            partyReservationRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public ResponseEntity<List<PartyReservation>> getByPartyType(String partyType) {
-        try {
-            List<PartyReservation> partyReservations = new ArrayList<>();
-
-            partyReservationRepository.findByPartyType(partyType).forEach(partyReservations::add);
-
-            if (partyReservations.isEmpty()) {
-                log.info("Menu with combo not found!");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(partyReservations, HttpStatus.OK);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public String deleteReservations() {
+        partyReservationRepository.deleteAll();
+        return "All the Menu Items are deleted";
     }
 }
