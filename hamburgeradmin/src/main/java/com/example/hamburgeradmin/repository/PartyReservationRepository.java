@@ -14,4 +14,5 @@ public interface PartyReservationRepository extends MongoRepository<PartyReserva
     Page<PartyReservation> findByCustomerNameContaining(String name, Pageable pageable);
     Optional<PartyReservation> findByReservationId(String id);
     Page<PartyReservation> findByPartyType(String partyType, Pageable pageable);
+    Page<PartyReservation> findByCustomerNameContainingAndPartyType(String name, String partyType, Pageable pageable);
 }
