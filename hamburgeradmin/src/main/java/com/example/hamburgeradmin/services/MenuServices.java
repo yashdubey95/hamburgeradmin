@@ -41,8 +41,10 @@ public class MenuServices {
                 pageMenu = menuRepository.findAll(paging);
             else if(category == null)
                 pageMenu = menuRepository.findByItemNameContaining(name,paging);
-            else
+            else if(name == null)
                 pageMenu = menuRepository.findByCategory(category, paging);
+            else
+                pageMenu = menuRepository.findByItemNameContainingAndCategory(name, category, paging);
 
             if(! CollectionUtils.isEmpty(pageMenu.getContent())) return pagedResourcesAssembler.toModel(pageMenu, menuAssembler);
             return null;
