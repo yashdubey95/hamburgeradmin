@@ -15,4 +15,5 @@ public interface MenuRepository  extends MongoRepository<Menu, String> {
     Optional<Menu> findByMenuId(String id);
     Page<Menu> findByItemNameContaining(String name, Pageable pageable);
     Page<Menu> findByComboAllowed(Boolean combo, Pageable pageable);
+    Page<Menu> findByItemNameContainingAndCategory(String name, String category, Pageable pageable);
 }
