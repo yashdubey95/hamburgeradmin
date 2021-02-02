@@ -69,10 +69,10 @@ public class PartyReservationController {
 
     @Operation(summary = "Create a new Reservation in the PartyReservation Entity")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Reservation created",
+            @ApiResponse(responseCode = "200", description = "Reservation created",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = PartyReservation.class)) }),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "400", description = "Bad Request Error",
                     content = @Content) })
     @PostMapping("/reservations")
     public ResponseEntity createReservation(@RequestBody PartyReservation reservation) {
