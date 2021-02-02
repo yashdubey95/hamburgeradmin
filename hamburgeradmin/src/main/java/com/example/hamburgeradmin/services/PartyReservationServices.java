@@ -43,8 +43,10 @@ public class PartyReservationServices {
                 pageReservations = partyReservationRepository.findAll(paging);
             else if(partyType == null)
                 pageReservations = partyReservationRepository.findByCustomerNameContaining(name, paging);
-            else
+            else if(name == null)
                 pageReservations = partyReservationRepository.findByPartyType(partyType, paging);
+            else
+                pageReservations = partyReservationRepository.findByCustomerNameContainingAndPartyType(name, partyType, paging);
 
             if(! CollectionUtils.isEmpty(pageReservations.getContent())) return pagedResourcesAssembler.toModel(pageReservations, partyReservationAssembler);
             return null;
