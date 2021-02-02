@@ -2,6 +2,7 @@ package com.example.hamburgeradmin.services;
 
 import com.example.hamburgeradmin.assemblers.LocationAssembler;
 import com.example.hamburgeradmin.dto.LocationDTO;
+import com.example.hamburgeradmin.exception.BadRequestException;
 import com.example.hamburgeradmin.exception.InternalServerErrorException;
 import com.example.hamburgeradmin.exception.ResourceNotFoundException;
 import com.example.hamburgeradmin.model.Location;
@@ -33,6 +34,7 @@ public class LocationServices {
     private final PagedResourcesAssembler pagedResourcesAssembler;
 
     public CollectionModel<LocationDTO> getAllLocations(String name, int page, int size){
+        log.info("Entering getAllLocations method with name = {}", name);
         try {
             Pageable paging = PageRequest.of(page, size);
             Page<Location> pageLocations;
@@ -41,17 +43,20 @@ public class LocationServices {
             else
                 pageLocations = locationRepository.findByNameContaining(name, paging);
 
+            log.info("Finishing getAllLocations method");
             if(! CollectionUtils.isEmpty(pageLocations.getContent())) return pagedResourcesAssembler.toModel(pageLocations, locationAssembler);
             return null;
-
         } catch (Exception e) {
+            log.error("Internal Server Error - getAllLocations method");
             throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
     public LocationDTO getLocationById(String id) {
+        log.info("Entering getLocationById method with id = {}", id);
         Optional<Location> locationData = locationRepository.findById(id);
         Location location;
+        log.info("Finishing getLocationById method");
         if (locationData.isPresent()) {
             location = locationData.get();
             return locationAssembler.toModel(location);
@@ -60,15 +65,20 @@ public class LocationServices {
     }
 
     public LocationDTO createLocation(Location location) {
+        log.info("Entering createLocation method with location body = {}", location);
         try {
             Location createdlocation = locationRepository.save(location);
+            log.info("Location created with Location id: {}", createdlocation.getLocationId());
+            log.info("Finishing createLocation method");
             return locationAssembler.toModel(createdlocation);
         } catch (Exception e) {
-            throw new InternalServerErrorException("Internal Server Error");
+            log.error("Bad Request Error - createLocation method");
+            throw new BadRequestException("Invalid Request");
         }
     }
 
     public LocationDTO updateLocation(String id, Location location){
+        log.info("Entering updateLocation method with id = {} and location body = {}", id, location);
         Optional<Location> locationData = locationRepository.findByLocationId(id);
         Location locationDTO;
         if (locationData.isPresent()) {
@@ -80,32 +90,49 @@ public class LocationServices {
             updatedLocation.setAddress(location.getAddress());
             updatedLocation.setActive(location.getActive());
             locationDTO = locationRepository.save(updatedLocation);
+            log.info("Location updated with Location id: {}", id);
+            log.info("Finishing updateLocation method");
             return locationAssembler.toModel(locationDTO);
         }
         return null;
     }
 
     public String deleteLocation(String id) {
+        log.info("Entering deleteLocation method with id = {}", id);
         if (locationRepository.existsById(id)){
             locationRepository.deleteById(id);
+            log.info("Location deleted with Location id: {}", id);
+            log.info("Finishing updateLocation method");
             return "Location with id: "+id+" deleted";
         }
+        log.error("Location with id: "+id+" does not exists");
         throw new ResourceNotFoundException("Location", id);
     }
 
     public String deleteAllLocations() {
-        locationRepository.deleteAll();
-        return "All Location deleted";
+        log.info("Entering deleteAllLocations method");
+        try{
+            locationRepository.deleteAll();
+            log.info("All Locations deleted");
+            log.info("Finishing deleteAllLocations method");
+            return "All Location deleted";
+        } catch (Exception e) {
+            log.error("Internal Server Error - deleteAllLocations method");
+            throw new InternalServerErrorException("Internal Server Error");
+        }
+
     }
 
     public CollectionModel<LocationDTO> getByActive(Boolean active, int page, int size) {
+        log.info("Entering getByActive method with active = {}", active);
         try {
             Pageable paging = PageRequest.of(page, size);
             Page<Location> pageLocations = locationRepository.findByActive(true, paging);
-
+            log.info("Finishing getByActive method");
             if(! CollectionUtils.isEmpty(pageLocations.getContent())) return pagedResourcesAssembler.toModel(pageLocations, locationAssembler);
             return null;
         } catch (Exception e) {
+            log.error("Internal Server Error - getByActive method");
             throw new InternalServerErrorException("Internal Server Error");
         }
     }

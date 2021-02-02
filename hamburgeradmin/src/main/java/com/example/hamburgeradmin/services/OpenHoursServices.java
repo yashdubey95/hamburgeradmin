@@ -24,12 +24,15 @@ public class OpenHoursServices {
     private final LocationAssembler locationAssembler;
 
     public LocationDTO updateOpenHours(String id, Location openHours) {
+        log.info("Entering updateOpenHours method with id = {} and openHours body = {}", id, openHours.getOpenHours());
         Optional<Location> openHoursData = locationRepository.findByLocationId(id);
         Location hoursDTO;
         if (openHoursData.isPresent()) {
             Location updatedHours = openHoursData.get();
             updatedHours.setOpenHours(openHours.getOpenHours());
             hoursDTO = locationRepository.save(updatedHours);
+            log.info("Open Hours updated with Location id: {}", id);
+            log.info("Finishing updateOpenHours method");
             return locationAssembler.toModel(hoursDTO);
         }
         return null;

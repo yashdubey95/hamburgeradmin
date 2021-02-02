@@ -32,6 +32,7 @@ public class APIDetailsServices {
     private final PagedResourcesAssembler pagedResourcesAssembler;
 
     public CollectionModel<APIDetailsDTO> getAllExecTime(String reqName, LocalDate reqTimeStamp, int page, int size) {
+        log.info("Entering getAllExecTime method with reqName = {} and reqTimeStamp = {}", reqName, reqTimeStamp);
         try{
             Pageable paging = PageRequest.of(page, size);
             Page<APIDetails> pageExecutionTimes;
@@ -44,10 +45,11 @@ public class APIDetailsServices {
                 pageExecutionTimes = apiDetailsRepository.findByReqTimeStamp(reqTimeStamp, paging);
             else
                 pageExecutionTimes = apiDetailsRepository.findByReqNameAndReqTimeStamp(reqName, reqTimeStamp, paging);
-
+            log.info("Finishing getAllExecTime method");
             if(! CollectionUtils.isEmpty(pageExecutionTimes.getContent())) return pagedResourcesAssembler.toModel(pageExecutionTimes, apiDetailsAssembler);
             return null;
         } catch (Exception e){
+            log.error("Internal Server Error - getAllExecTime method");
             throw new InternalServerErrorException();
         }
 

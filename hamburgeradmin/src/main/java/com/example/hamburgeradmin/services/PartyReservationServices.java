@@ -35,6 +35,7 @@ public class PartyReservationServices {
     private final PartyReservationAssembler partyReservationAssembler;
 
     public CollectionModel<PartyReservationDTO> getAllReservations(String name, String partyType, int page, int size) {
+        log.info("Entering getAllReservations method with name = {} and partyType = {}", name, partyType);
         try {
             Pageable paging = PageRequest.of(page, size);
             Page<PartyReservation> pageReservations;
@@ -48,17 +49,21 @@ public class PartyReservationServices {
             else
                 pageReservations = partyReservationRepository.findByCustomerNameContainingAndPartyType(name, partyType, paging);
 
+            log.info("Finishing getAllReservations method");
             if(! CollectionUtils.isEmpty(pageReservations.getContent())) return pagedResourcesAssembler.toModel(pageReservations, partyReservationAssembler);
             return null;
 
         } catch (Exception e) {
+            log.error("Internal Server Error - getAllReservations method");
             throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
     public PartyReservationDTO getReservationById(String id) {
+        log.info("Entering getReservationById method with id = {}", id);
         Optional<PartyReservation> reservationData = partyReservationRepository.findById(id);
         PartyReservation reservation;
+        log.info("Finishing getReservationById method");
         if (reservationData.isPresent()) {
             reservation = reservationData.get();
             return partyReservationAssembler.toModel(reservation);
@@ -67,15 +72,20 @@ public class PartyReservationServices {
     }
 
     public PartyReservationDTO createReservation(PartyReservation reservation) {
+        log.info("Entering createReservation method with menu body = {}", reservation);
         try {
             PartyReservation createReservation = partyReservationRepository.save(reservation);
+            log.info("Reservation created with Reservation id: {}", createReservation.getReservationId());
+            log.info("Finishing createReservation method");
             return partyReservationAssembler.toModel(createReservation);
         } catch (Exception e) {
+            log.error("Bad Request Error - createReservation method");
             throw new InternalServerErrorException("Internal Server Error");
         }
     }
 
     public PartyReservationDTO updateReservation(@PathVariable("id") String id, @RequestBody PartyReservation reservation) {
+        log.info("Entering updateReservation method with id = {} and reservation body = {}", id, reservation);
         Optional<PartyReservation> reservationData = partyReservationRepository.findByReservationId(id);
         PartyReservation reservationDTO;
         if (reservationData.isPresent()) {
@@ -88,21 +98,35 @@ public class PartyReservationServices {
             updateReservation.setPartyType(reservation.getPartyType());
             updateReservation.setDate(reservation.getDate());
             reservationDTO = partyReservationRepository.save(updateReservation);
+            log.info("Reservation updated with Reservation id: {}", id);
+            log.info("Finishing updateReservation method");
             return partyReservationAssembler.toModel(reservationDTO);
         }
         return null;
     }
 
     public String deleteReservation(String id) {
+        log.info("Entering deleteReservation method with id = {}", id);
         if (partyReservationRepository.existsById(id)){
             partyReservationRepository.deleteById(id);
+            log.info("Reservation deleted with Reservation id: {}", id);
+            log.info("Finishing deleteReservation method");
             return "Reservation with id: "+id+" deleted";
         }
+        log.error("Reservation with id: "+id+" does not exists");
         throw new ResourceNotFoundException("Reservation", id);
     }
 
     public String deleteReservations() {
-        partyReservationRepository.deleteAll();
-        return "All the Menu Items are deleted";
+        log.info("Entering deleteReservations method");
+        try{
+            partyReservationRepository.deleteAll();
+            log.info("All Reservation deleted");
+            log.info("Finishing deleteReservations method");
+            return "All Reservation deleted";
+        } catch (Exception e) {
+            log.error("Internal Server Error");
+            throw new InternalServerErrorException("Internal Server Error");
+        }
     }
 }
