@@ -70,10 +70,10 @@ public class MenuController {
 
     @Operation(summary = "Create a new Menu Item in the Menu Entity")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Menu Item created",
+            @ApiResponse(responseCode = "200", description = "Menu Item created",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Menu.class)) }),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "400", description = "Bad Request Error",
                     content = @Content) })
     @PostMapping("/menus")
     public ResponseEntity createMenu(@RequestBody Menu menu) {
