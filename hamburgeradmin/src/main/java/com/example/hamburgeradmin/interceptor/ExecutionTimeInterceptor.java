@@ -3,8 +3,6 @@ package com.example.hamburgeradmin.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.example.hamburgeradmin.model.APIDetails;
-import com.example.hamburgeradmin.repository.APIDetailsRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,17 +11,13 @@ import lombok.extern.log4j.Log4j2;
 
 import java.time.LocalDate;
 
-/**
- * @author Yash Dubey
- * <p>
- * This class encapsulates the implementation of a Request Interceptor
- */
 @AllArgsConstructor
 @Component
 @Log4j2
 public class ExecutionTimeInterceptor implements HandlerInterceptor  {
 
-    private APIDetailsRepository apiDetailsRepository;
+    private final KafkaProducer kafkaProducer;
+
     @Override
     public void afterCompletion(HttpServletRequest request,
                                 HttpServletResponse response, Object object, Exception arg3)
@@ -38,12 +32,7 @@ public class ExecutionTimeInterceptor implements HandlerInterceptor  {
         log.info("Request URL: {}", request.getRequestURL().toString());
         log.info("Total Time Taken: {} ms", time);
 
-        APIDetails apiDetails = new APIDetails();
-        apiDetails.setReqName(request.getMethod());
-        apiDetails.setReqUrl(request.getRequestURL().toString());
-        apiDetails.setReqTimeStamp(timeStamp);
-        apiDetails.setReqExecTime(time);
-        apiDetailsRepository.save(apiDetails);
+        kafkaProducer.producer(request, timeStamp, time);
 
     }
 
