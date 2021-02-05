@@ -1,5 +1,6 @@
 package com.example.hamburgeradmin.dto;
 
+import com.example.hamburgeradmin.model.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
@@ -13,5 +14,5 @@ public class MenuDTO extends RepresentationModel<MenuDTO> {
     private Double itemPrice;
     private Boolean comboAllowed;
     private Double comboPrice;
-    private String category;
+    private Category category;
 }

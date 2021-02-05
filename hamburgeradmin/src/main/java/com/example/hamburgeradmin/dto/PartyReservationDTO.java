@@ -14,6 +14,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class PartyReservationDTO extends RepresentationModel<PartyReservationDTO> {
     private String customerName;
+    private String locationName;
     private PartyType partyType;
     private Integer peopleCount;
     private String table;

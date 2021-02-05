@@ -19,3 +19,4 @@ public class LocationDTO extends RepresentationModel<LocationDTO> {
     private Boolean active;
     private List openHours;
 }
+
