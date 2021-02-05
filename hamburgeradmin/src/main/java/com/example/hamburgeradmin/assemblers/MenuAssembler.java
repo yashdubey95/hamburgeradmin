@@ -19,3 +19,4 @@ public class MenuAssembler implements RepresentationModelAssembler<Menu, MenuDTO
         return new MenuDTO(entity.getItemName(), entity.getItemPrice(), entity.getComboAllowed(), entity.getComboPrice(), entity.getCategory());
     }
 }
+

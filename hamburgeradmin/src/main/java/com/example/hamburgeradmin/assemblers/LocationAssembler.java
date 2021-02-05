@@ -19,3 +19,4 @@ public class LocationAssembler implements RepresentationModelAssembler<Location,
         return new LocationDTO(entity.getName(), entity.getLatitude(), entity.getLongitude(), entity.getAddress(), entity.getPhone(), entity.getActive(), entity.getOpenHours());
     }
 }
+

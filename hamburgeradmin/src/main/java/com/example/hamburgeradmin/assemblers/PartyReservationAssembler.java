@@ -16,6 +16,6 @@ import org.springframework.stereotype.Component;
 public class PartyReservationAssembler implements RepresentationModelAssembler<PartyReservation, PartyReservationDTO> {
 
     public PartyReservationDTO toModel(PartyReservation entity) {
-        return new PartyReservationDTO(entity.getCustomerName(), entity.getPartyType(), entity.getPeopleCount(), entity.getTable(), entity.getDate(), entity.getStartTime(), entity.getEndTime());
+        return new PartyReservationDTO(entity.getCustomerName(), entity.getLocationName(), entity.getPartyType(), entity.getPeopleCount(), entity.getTable(), entity.getDate(), entity.getStartTime(), entity.getEndTime());
     }
 }
