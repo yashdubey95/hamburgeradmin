@@ -5,12 +5,11 @@ services:
   myapp-mysql:
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=:Lazarus_95
+      - MYSQL_ROOT_PASSWORD=Lazarus_95
       - MYSQL_DATABASE=springsecurity
-      - MYSQL_USER=root
       - MYSQL_PASSWORD=Lazarus_95
     ports:
-      - 3306:3306
+      - 3307:3306
     networks:
       - spring-mysql-mongodb
 
