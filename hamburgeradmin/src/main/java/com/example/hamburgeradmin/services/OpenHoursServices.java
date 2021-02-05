@@ -2,6 +2,7 @@ package com.example.hamburgeradmin.services;
 
 import com.example.hamburgeradmin.assemblers.LocationAssembler;
 import com.example.hamburgeradmin.dto.LocationDTO;
+import com.example.hamburgeradmin.exception.ResourceNotFoundException;
 import com.example.hamburgeradmin.model.Location;
 import com.example.hamburgeradmin.repository.LocationRepository;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,7 @@ public class OpenHoursServices {
             log.info("Finishing updateOpenHours method");
             return locationAssembler.toModel(hoursDTO);
         }
-        return null;
+        log.error("Location with id: "+id+" does not exists");
+        throw new ResourceNotFoundException("Location with id: "+id+" does not exists");
     }
 }

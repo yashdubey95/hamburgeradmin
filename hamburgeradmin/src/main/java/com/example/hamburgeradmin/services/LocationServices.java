@@ -73,7 +73,7 @@ public class LocationServices {
             return locationAssembler.toModel(createdlocation);
         } catch (Exception e) {
             log.error("Bad Request Error - createLocation method");
-            throw new BadRequestException("Invalid Request");
+            throw new BadRequestException("One or more fields in location is/are Invalid");
         }
     }
 
@@ -94,7 +94,8 @@ public class LocationServices {
             log.info("Finishing updateLocation method");
             return locationAssembler.toModel(locationDTO);
         }
-        return null;
+        log.error("Location with id: "+id+" does not exists");
+        throw new ResourceNotFoundException("Location with id: "+id+" does not exists");
     }
 
     public String deleteLocation(String id) {
@@ -106,7 +107,7 @@ public class LocationServices {
             return "Location with id: "+id+" deleted";
         }
         log.error("Location with id: "+id+" does not exists");
-        throw new ResourceNotFoundException("Location", id);
+        throw new ResourceNotFoundException("Location with id: "+id+" does not exists");
     }
 
     public String deleteAllLocations() {
@@ -116,7 +117,7 @@ public class LocationServices {
             log.info("All Locations deleted");
             log.info("Finishing deleteAllLocations method");
             return "All Location deleted";
-        } catch (Exception e) {
+        } catch (InternalServerErrorException e) {
             log.error("Internal Server Error - deleteAllLocations method");
             throw new InternalServerErrorException("Internal Server Error");
         }
@@ -131,9 +132,9 @@ public class LocationServices {
             log.info("Finishing getByActive method");
             if(! CollectionUtils.isEmpty(pageLocations.getContent())) return pagedResourcesAssembler.toModel(pageLocations, locationAssembler);
             return null;
-        } catch (Exception e) {
-            log.error("Internal Server Error - getByActive method");
-            throw new InternalServerErrorException("Internal Server Error");
+        } catch (BadRequestException e) {
+            log.error("Bad Request Error - getByActive method");
+            throw new BadRequestException("Active should be a Boolean");
         }
     }
 }

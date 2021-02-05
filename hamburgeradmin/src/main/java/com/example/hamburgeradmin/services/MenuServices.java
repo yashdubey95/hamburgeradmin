@@ -52,7 +52,7 @@ public class MenuServices {
             if(! CollectionUtils.isEmpty(pageMenu.getContent())) return pagedResourcesAssembler.toModel(pageMenu, menuAssembler);
             return null;
 
-        } catch (Exception e) {
+        } catch (InternalServerErrorException e) {
             log.error("Internal Server Error - getAllMenus method");
             throw new InternalServerErrorException("Internal Server Error");
         }
@@ -77,9 +77,9 @@ public class MenuServices {
             log.info("Menu Item created with Menu id: {}", menu.getMenuId());
             log.info("Finishing createMenu method");
             return menuAssembler.toModel(menuItem);
-        } catch (Exception e) {
+        } catch (BadRequestException e) {
             log.error("Bad Request Error - createMenu method");
-            throw new BadRequestException("Internal Server Error");
+            throw new BadRequestException("One or more fields in Menu Item is/are Invalid");
         }
     }
 
@@ -99,7 +99,8 @@ public class MenuServices {
             log.info("Finishing updateMenu method");
             return menuAssembler.toModel(menuItemDTO);
         }
-        return null;
+        log.error("Menu with id: "+id+" does not exists");
+        throw new ResourceNotFoundException("Menu with id: "+id+" does not exists");
     }
 
     public String deleteMenu(String id) {
@@ -111,7 +112,7 @@ public class MenuServices {
             return "Menu Item with id: "+id+" deleted";
         }
         log.error("Menu with id: "+id+" does not exists");
-        throw new ResourceNotFoundException("Menu", id);
+        throw new ResourceNotFoundException("Menu with id: "+id+" does not exists");
     }
 
     public String deleteAllMenus() {
@@ -121,7 +122,7 @@ public class MenuServices {
             log.info("All Menu Items deleted");
             log.info("Finishing deleteAllMenus method");
             return "All Menu Items deleted";
-        } catch (Exception e) {
+        } catch (InternalServerErrorException e) {
             log.error("Internal Server Error - deleteAllMenus method");
             throw new InternalServerErrorException("Internal Server Error");
         }
@@ -136,9 +137,9 @@ public class MenuServices {
             if(! CollectionUtils.isEmpty(pageMenu.getContent())) return pagedResourcesAssembler.toModel(pageMenu, menuAssembler);
             return null;
 
-        } catch (Exception e) {
-            log.error("Internal Server Error - getByCombo method");
-            throw new InternalServerErrorException("Internal Server Error");
+        } catch (InternalServerErrorException e) {
+            log.error("Bad Request Error - getByCombo method");
+            throw new BadRequestException("Combo should be boolean");
         }
     }
 }

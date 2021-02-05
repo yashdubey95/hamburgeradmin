@@ -1,9 +1,12 @@
 package com.example.hamburgeradmin.services;
 
 import com.example.hamburgeradmin.assemblers.PartyReservationAssembler;
+import com.example.hamburgeradmin.dto.LocationDTO;
 import com.example.hamburgeradmin.dto.PartyReservationDTO;
+import com.example.hamburgeradmin.exception.BadRequestException;
 import com.example.hamburgeradmin.exception.InternalServerErrorException;
 import com.example.hamburgeradmin.exception.ResourceNotFoundException;
+import com.example.hamburgeradmin.model.Location;
 import com.example.hamburgeradmin.model.PartyReservation;
 import com.example.hamburgeradmin.repository.PartyReservationRepository;
 import lombok.AllArgsConstructor;
@@ -80,7 +83,7 @@ public class PartyReservationServices {
             return partyReservationAssembler.toModel(createReservation);
         } catch (Exception e) {
             log.error("Bad Request Error - createReservation method");
-            throw new InternalServerErrorException("Internal Server Error");
+            throw new BadRequestException("One or more fields in reservation is Invalid");
         }
     }
 
@@ -102,7 +105,8 @@ public class PartyReservationServices {
             log.info("Finishing updateReservation method");
             return partyReservationAssembler.toModel(reservationDTO);
         }
-        return null;
+        log.error("Reservation with id: "+id+" does not exists");
+        throw new ResourceNotFoundException("Reservation with id: "+id+" does not exists");
     }
 
     public String deleteReservation(String id) {
@@ -114,7 +118,7 @@ public class PartyReservationServices {
             return "Reservation with id: "+id+" deleted";
         }
         log.error("Reservation with id: "+id+" does not exists");
-        throw new ResourceNotFoundException("Reservation", id);
+        throw new ResourceNotFoundException("Reservation with id: "+id+" does not exists");
     }
 
     public String deleteReservations() {
@@ -129,4 +133,19 @@ public class PartyReservationServices {
             throw new InternalServerErrorException("Internal Server Error");
         }
     }
+
+    public CollectionModel<PartyReservationDTO> getByLocation(String locationName, int page, int size) {
+        log.info("Entering getByLocation method with locationName = {}", locationName);
+        try {
+            Pageable paging = PageRequest.of(page, size);
+            Page<PartyReservation> pageReservations = partyReservationRepository.findByLocationNameContaining(locationName, paging);
+            log.info("Finishing getByActive method");
+            if(! CollectionUtils.isEmpty(pageReservations.getContent())) return pagedResourcesAssembler.toModel(pageReservations, partyReservationAssembler);
+            return null;
+        } catch (BadRequestException e) {
+            log.error("Bad Request Error - getByLocation method");
+            throw new BadRequestException("locationName should be a String");
+        }
+    }
 }
+
