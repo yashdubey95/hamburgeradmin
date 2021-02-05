@@ -1,6 +1,8 @@
 package com.example.hamburgeradmin.controller;
 
+import com.example.hamburgeradmin.dto.LocationDTO;
 import com.example.hamburgeradmin.dto.PartyReservationDTO;
+import com.example.hamburgeradmin.model.Location;
 import com.example.hamburgeradmin.model.PartyReservation;
 import com.example.hamburgeradmin.services.PartyReservationServices;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,10 +79,8 @@ public class PartyReservationController {
     @PostMapping("/reservations")
     public ResponseEntity createReservation(@RequestBody PartyReservation reservation) {
         PartyReservationDTO createdReservation = partyReservationServices.createReservation(reservation);
-        if(createdReservation != null) {
-            return ResponseEntity.ok(createdReservation);
-        }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(createdReservation);
+
     }
 
     @Operation(summary = "Update Reservation by id in the PartyReservation Entity")
@@ -93,10 +93,7 @@ public class PartyReservationController {
     @PutMapping("/reservations/{id}")
     public ResponseEntity updateReservation(@PathVariable("id") String id, @RequestBody PartyReservation reservation) {
         PartyReservationDTO updatedReservation = partyReservationServices.updateReservation(id, reservation);
-        if(updatedReservation != null) {
-            return ResponseEntity.ok(updatedReservation);
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updatedReservation);
     }
 
     @Operation(summary = "Delete Reservation by id in the PartyReservation Entity")
@@ -104,7 +101,7 @@ public class PartyReservationController {
 
             @ApiResponse(responseCode = "200", description = "Reservation deleted",
                     content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "404", description = "Not Found",
                     content = @Content) })
     @DeleteMapping("/reservations/{id}")
     public ResponseEntity deleteReservation(@PathVariable("id") String id) {
@@ -121,6 +118,27 @@ public class PartyReservationController {
     @DeleteMapping("/reservations")
     public ResponseEntity deleteReservations() {
         return ResponseEntity.ok(partyReservationServices.deleteReservations());
+    }
+
+    @Operation(summary = "Get all reservations in the PartyReservation Entity based on their location")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Locations found",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Location.class)) }),
+            @ApiResponse(responseCode = "204", description = "No content",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content) })
+    @GetMapping("/reservations/location/{locationName}")
+    public ResponseEntity getByLocation(
+            @PathVariable("active") String locationName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size) {
+        CollectionModel<PartyReservationDTO> reservations = partyReservationServices.getByLocation(locationName, page, size);
+        if(reservations != null) {
+            return ResponseEntity.ok(reservations);
+        }
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -78,10 +78,7 @@ public class MenuController {
     @PostMapping("/menus")
     public ResponseEntity createMenu(@RequestBody Menu menu) {
         MenuDTO menuItem = menuServices.createMenu(menu);
-        if(menuItem != null) {
-            return ResponseEntity.ok(menuItem);
-        }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(menuItem);
     }
 
     @Operation(summary = "Update Menu Item by id in the Menu Entity")
@@ -94,10 +91,7 @@ public class MenuController {
     @PutMapping("/menus/{id}")
     public ResponseEntity updateMenu(@PathVariable("id") String id, @RequestBody Menu menu) {
         MenuDTO menuItem = menuServices.updateMenu(id, menu);
-        if(menuItem != null) {
-            return ResponseEntity.ok(menuItem);
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(menuItem);
     }
 
     @Operation(summary = "Delete Menu Item by id in the Menu Entity")
@@ -105,7 +99,7 @@ public class MenuController {
 
             @ApiResponse(responseCode = "200", description = "Menu Item deleted",
                     content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "404", description = "Not found",
                     content = @Content) })
     @DeleteMapping("/menus/{id}")
     public ResponseEntity deleteMenu(@PathVariable("id") String id) {
@@ -132,7 +126,7 @@ public class MenuController {
                             schema = @Schema(implementation = Menu.class)) }),
             @ApiResponse(responseCode = "204", description = "No content",
                     content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "400", description = "Bad Request Error",
                     content = @Content) })
     @GetMapping("/menus/comboAllowed/{combo}")
     public ResponseEntity getByCombo(

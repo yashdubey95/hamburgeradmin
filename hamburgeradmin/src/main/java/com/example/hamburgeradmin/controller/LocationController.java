@@ -88,10 +88,7 @@ public class LocationController {
     @PutMapping("/locations/{id}")
     public ResponseEntity updateLocation(@PathVariable("id") String id, @RequestBody Location location) {
         LocationDTO updatedLocation = locationService.updateLocation(id, location);
-        if(updatedLocation != null) {
-            return ResponseEntity.ok(updatedLocation);
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updatedLocation);
     }
 
     @Operation(summary = "Delete location by id in the Location Entity")
@@ -99,7 +96,7 @@ public class LocationController {
 
             @ApiResponse(responseCode = "200", description = "Location deleted",
                     content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "404", description = "Not Found",
                     content = @Content) })
     @DeleteMapping("/locations/{id}")
     public ResponseEntity deleteLocation(@PathVariable("id") String id) {
@@ -126,7 +123,7 @@ public class LocationController {
                             schema = @Schema(implementation = Location.class)) }),
             @ApiResponse(responseCode = "204", description = "No content",
                     content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
+            @ApiResponse(responseCode = "400", description = "Bad Request",
                     content = @Content) })
     @GetMapping("/locations/active/{active}")
     public ResponseEntity getByActive(

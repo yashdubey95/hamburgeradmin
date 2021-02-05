@@ -38,9 +38,6 @@ public class OpenHoursController {
     @PutMapping("/hours/{id}")
     public ResponseEntity updateOpenHours(@PathVariable("id") String id, @RequestBody Location openHours) {
         LocationDTO updatedHours = openHoursServices.updateOpenHours(id, openHours);
-        if(updatedHours != null) {
-            return ResponseEntity.ok(updatedHours);
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updatedHours);
     }
 }
