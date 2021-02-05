@@ -19,6 +19,7 @@ public class PartyReservation {
     @Id
     private String reservationId;
     private String customerName;
+    private String locationName;
     private PartyType partyType;
     private Integer peopleCount;
     private String table;

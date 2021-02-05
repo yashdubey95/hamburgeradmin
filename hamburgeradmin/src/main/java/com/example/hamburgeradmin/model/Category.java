@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
 @AllArgsConstructor
-@Data
-public class Category {
-    private String category;
+public enum Category {
+    APPETIZERS, BREAKFAST, LUNCH, MAINS, DESSERTS, DRINKS, SPECIALS
 }
